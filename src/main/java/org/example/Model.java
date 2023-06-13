@@ -13,7 +13,6 @@ public class Model {
     EntityManager em = emf.createEntityManager();
 
     public boolean persisteUsuario(Usuario usuario){
-        // verifica se ja existe um usuario ja registrado com esse login
         if (buscaUsuarioPorLogin(usuario.getLogin()) != null){
             return false;
         } 
@@ -96,7 +95,7 @@ public class Model {
 
                 for(Long idUsuarioSeguindo : usuarioLogado.getSeguindo()){
                     Usuario usuarioSeguindo = buscaUsuarioPorId(Long.toString(idUsuarioSeguindo));
-                    mensagens[lin][0] = usuarioSeguindo.getLogin(); // primeira campo de cada linha é o nome do usuario que realizou as postagens
+                    mensagens[lin][0] = usuarioSeguindo.getLogin();
         
                     for(int col = 1; col <= usuarioSeguindo.getMensagens().size(); col++){
                         String mensagemCol = usuarioSeguindo.getMensagens().get(col-1);
@@ -114,7 +113,6 @@ public class Model {
         return mensagens;
     }
     public boolean seguirUsuario(Usuario usuarioSeguindo, Usuario usuarioASeguir){
-        // verifica se o usuario esta tentando seguir a si mesmo, ou um usuario que ele já segue
         if(usuarioSeguindo.getId() == usuarioASeguir.getId() || usuarioSeguindo.getSeguindo().contains(usuarioASeguir.getId())){ 
             return false;
         } 

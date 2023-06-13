@@ -9,4 +9,3 @@
            <p> `<property name="javax.persistence.jdbc.user" value="root"/>` </p>
            <p>  `<property name="javax.persistence.jdbc.password" value=""/>`</p>
    para o usuário e senha do seu MySQl respectivamente
-2. Crie uma database chamada "mydb"
