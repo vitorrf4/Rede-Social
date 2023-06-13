@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Model {
-    EntityManagerFactory emf = Persistence.createEntityManagerFactory("mydb");
+    EntityManagerFactory emf = Persistence.createEntityManagerFactory("redesocial");
     EntityManager em = emf.createEntityManager();
 
     public boolean persisteUsuario(Usuario usuario){
