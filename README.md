@@ -1,7 +1,20 @@
 # Rede-Social
 
 <p>Trabalho desenvolvido para a disciplina de Desenvolvimento de Software utilizando Java integrado com o banco de dados MySQL.</p´>
-<p>Emula uma rede social similar ao Twitter, com a opção de cadastrar, ler, e remover usuários, escrever postagens, seguir pessoas e visualizar uma timeline com as postagens das pessoas que você segue.</p>
+<p>Emula uma rede social similar ao Twitter, com a opção de cadastrar, ler, e remover usuários, escrever postagens, seguir pessoas e visualizar uma timeline com as postagens de quem você segue.</p>
+
+Tecnologias Usadas
+- Java
+- MySQL
+- Maven
+- Hibernate
+
+Conceitos Aplicados
+- Orientação a Objetos
+- CRUD
+- MVC
+- Persistência em Banco de Dados
+
 
 ## Instruções para iniciar o programa
 
