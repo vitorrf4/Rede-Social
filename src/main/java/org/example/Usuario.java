@@ -23,10 +23,9 @@ public class Usuario {
     private int seguidores;
     private HashSet<Long> seguindo = new HashSet<Long>();
     @Lob
-    @Column(length = 251) // Sem essas duas propriedades o programa não consegue receber mensagens de 100 caracteres sem crashar
+    @Column(length = 251) // Sem essas duas propriedades o programa não consegue receber mensagens de 100 caracteres
     private ArrayList<String> mensagens = new ArrayList<String>();
-    
-    //Hibernate não funciona sem o construtor padrão
+
     public Usuario(){}
       
     public Usuario(String nome, String login, String senha){
@@ -78,4 +77,8 @@ public class Usuario {
         return mensagens;
     }
 
+    @Override
+    public String toString() {
+        return login;
+    }
 }

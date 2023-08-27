@@ -1,5 +1,8 @@
 package org.example;
 
+import org.apache.commons.collections.MultiMap;
+import org.apache.commons.collections.map.MultiValueMap;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
@@ -12,10 +15,11 @@ public class Model {
     EntityManagerFactory emf = Persistence.createEntityManagerFactory("redesocial");
     EntityManager em = emf.createEntityManager();
 
-    public boolean persisteUsuario(Usuario usuario){
-        if (buscaUsuarioPorLogin(usuario.getLogin()) != null){
+    public boolean persistirUsuario(Usuario usuario) {
+        if (buscarUsuario(usuario.getLogin()) != null) {
             return false;
-        } 
+        }
+
         em.getTransaction().begin();
         em.persist(usuario);
         em.getTransaction().commit();
@@ -23,45 +27,42 @@ public class Model {
         return true;
     }
 
-    public Usuario buscaUsuarioPorId(String idRecebido){
+    public Usuario buscarUsuario(Long idRecebido) {
         try {
             Query queryUsuario = em.createQuery("select id from Usuario where id = :id and ativo = 1");
-            queryUsuario.setParameter("id", Long.parseLong(idRecebido));
+            queryUsuario.setParameter("id", idRecebido);
 
             Long idUsuario = (Long)queryUsuario.getSingleResult();
-            Usuario usuarioBuscado = em.find(Usuario.class, idUsuario);
 
-            return usuarioBuscado;
-        } catch (NumberFormatException | NoResultException e) {
+            return em.find(Usuario.class, idUsuario);
+        } catch (NoResultException e) {
             return null;
         }
     }
-    public Usuario buscaUsuarioPorLogin(String nomeUsuario){
+
+    public Usuario buscarUsuario(String nomeUsuario) {
         try {
             Query queryUsuario = em.createQuery("select id from Usuario where login = :login and ativo = 1");
             queryUsuario.setParameter("login", nomeUsuario);
 
             Long id = (Long)queryUsuario.getSingleResult();
 
-            Usuario usuarioBuscado = em.find(Usuario.class, id);
-
-            return usuarioBuscado;
+            return em.find(Usuario.class, id);
         } catch (Exception e) {
             return null;
         }
 
     }
 
-    public List<Usuario> buscaTodosUsuariosAtivos(){
+    public List<Usuario> buscarTodosUsuariosAtivos() {
         Query queryUsuarios = em.createQuery(
             "from Usuario where ativo = 1"
         );
-        List<Usuario> usuariosAtivos = queryUsuarios.getResultList();
 
-        return usuariosAtivos;
+        return (List<Usuario>) queryUsuarios.getResultList();
     }
 
-    public Usuario comparaLoginSenha(Usuario usuarioEntrado){
+    public Usuario compararLoginSenha(Usuario usuarioEntrado) {
         try {
             Query query = em.createQuery(
                 "select id from Usuario where login = :login and senha = :senha and ativo = 1"
@@ -69,53 +70,46 @@ public class Model {
             query.setParameter("login", usuarioEntrado.getLogin());
             query.setParameter("senha" , usuarioEntrado.getSenha());
 
-            Long idLong = (Long)query.getSingleResult();
-            String id = Long.toString(idLong);
-            Usuario usuario = buscaUsuarioPorId(id);
+            Long id = (Long)query.getSingleResult();
 
-            return usuario;
+            return buscarUsuario(id);
         } catch (Exception e) {
             return null;
         }
     }
 
-    public Iterator<String> buscaPostagens(Usuario usuario){
-        Iterator<String> itMensagens = usuario.getMensagens().iterator();
-        return itMensagens;
+    public Iterator<String> buscarPostagens(Usuario usuario) {
+        return usuario.getMensagens().iterator();
     }
 
-    public String[][] buscaTimeline(Usuario usuarioLogado){
-        int qntdSendoSeguida = usuarioLogado.getSeguindo().size();
-        String[][] mensagens = null;
-        int lin = 0;
-        
-        if(qntdSendoSeguida != 0){
-            try {
-                mensagens = new String[qntdSendoSeguida][50];
+    public MultiMap buscarTimeline(Usuario usuarioLogado) {
+        int qntdSeguida = usuarioLogado.getSeguindo().size();
 
-                for(Long idUsuarioSeguindo : usuarioLogado.getSeguindo()){
-                    Usuario usuarioSeguindo = buscaUsuarioPorId(Long.toString(idUsuarioSeguindo));
-                    mensagens[lin][0] = usuarioSeguindo.getLogin();
-        
-                    for(int col = 1; col <= usuarioSeguindo.getMensagens().size(); col++){
-                        String mensagemCol = usuarioSeguindo.getMensagens().get(col-1);
-                        
-                        mensagens[lin][col] = mensagemCol;
-                    }
-                    lin++;
+        if (qntdSeguida == 0)
+            return null;
+
+        MultiMap timeline = new MultiValueMap();
+
+        for (Long idSeguindo : usuarioLogado.getSeguindo()) {
+            Usuario seguindo = buscarUsuario(idSeguindo);
+
+            if (!seguindo.getMensagens().isEmpty()) {
+                for (String mensagem : seguindo.getMensagens()) {
+                    timeline.put(seguindo, mensagem);
                 }
-                
-            } catch (Exception e) {
-                return null;
             }
+
         }
 
-        return mensagens;
+        return timeline;
     }
-    public boolean seguirUsuario(Usuario usuarioSeguindo, Usuario usuarioASeguir){
-        if(usuarioSeguindo.getId() == usuarioASeguir.getId() || usuarioSeguindo.getSeguindo().contains(usuarioASeguir.getId())){ 
+
+    public boolean seguirUsuario(Usuario usuarioSeguindo, Usuario usuarioASeguir) {
+        if (usuarioSeguindo.getId().equals(usuarioASeguir.getId()) ||
+                usuarioSeguindo.getSeguindo().contains(usuarioASeguir.getId())) {
             return false;
-        } 
+        }
+
         try {
             em.getTransaction().begin();  
             usuarioSeguindo.getSeguindo().add(usuarioASeguir.getId());
@@ -123,33 +117,43 @@ public class Model {
             em.getTransaction().commit();
             return true;
         } catch (Exception e) {
+            em.getTransaction().rollback();
+            em.getTransaction().commit();
             return false;
         }
     }
     
-    public void desativaUsuario(Usuario usuarioDesativado){
-        em.getTransaction().begin();
-        usuarioDesativado.setAtivo(false);
-        diminuiNumSeguindo(usuarioDesativado);
-        diminuiNumSeguidores(usuarioDesativado);
-        em.getTransaction().commit();
+    public void desativarUsuario(Usuario usuarioDesativado) {
+        try {
+            em.getTransaction().begin();
+            usuarioDesativado.setAtivo(false);
+            diminuirNumSeguindo(usuarioDesativado);
+            diminuirNumSeguidores(usuarioDesativado);
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+        } finally {
+            em.getTransaction().commit();
+        }
     }
-    public void diminuiNumSeguindo(Usuario usuarioDesativado){
-        for(Long id : usuarioDesativado.getSeguindo()){
-            Usuario seguindo = buscaUsuarioPorId(Long.toString(id));
+
+    public void diminuirNumSeguindo(Usuario usuarioDesativado) {
+        for (Long id : usuarioDesativado.getSeguindo()) {
+            Usuario seguindo = buscarUsuario(Long.toString(id));
             seguindo.setSeguidores(seguindo.getSeguidores() - 1);
         }
     }
-    public void diminuiNumSeguidores(Usuario usuarioDesativado){
-        List<Usuario> todosUsarios = buscaTodosUsuariosAtivos();
 
-        for(Usuario seguindo : todosUsarios){
-            if(seguindo.getSeguindo().contains(usuarioDesativado.getId())){
+    public void diminuirNumSeguidores(Usuario usuarioDesativado){
+        List<Usuario> todosUsuarios = buscarTodosUsuariosAtivos();
+
+        for (Usuario seguindo : todosUsuarios) {
+            if (seguindo.getSeguindo().contains(usuarioDesativado.getId())) {
                 seguindo.getSeguindo().remove(usuarioDesativado.getId());
             }
         }
     }
-    public void salvaMensagem(String mensagem, Usuario usuario){
+
+    public void salvarMensagem(String mensagem, Usuario usuario){
         em.getTransaction().begin();
         usuario.getMensagens().add(mensagem);
         em.getTransaction().commit();

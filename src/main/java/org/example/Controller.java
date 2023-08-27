@@ -1,5 +1,7 @@
 package org.example;
 
+import org.apache.commons.collections.MultiMap;
+
 import java.util.Iterator;
 import java.util.List;
 
@@ -10,200 +12,209 @@ public class Controller {
     public Controller(Model model, View view){
         this.model = model;
         this.view = view;
-        selecionaAdminOuUsuario();
+        selecionarAdminOuUsuario();
     }
 
-    public void selecionaAdminOuUsuario(){
-        while(true){
-            String escolhaPrograma = view.recebeOpcaoPrograma();
+    public void selecionarAdminOuUsuario() {
+        while (true) {
+            String escolhaPrograma = view.receberOpcaoPrograma();
     
-            switch(escolhaPrograma){
+            switch (escolhaPrograma) {
                 case "1":
-                    selecionaOpcoesAdmin();
+                    selecionarOpcoesAdmin();
                     break;
                 case "2":
-                    selecionaOpcoesUsuario();
+                    selecionarOpcoesUsuario();
                     break;
                 default:
-                    view.mostraOpcaoInvalida();
+                    view.mostrarOpcaoInvalida();
                 break;
             }
-
         }
+
     }
 
     //Metódos admin
-    public void selecionaOpcoesAdmin(){
-        opcoesAdmin : while(true){
-            String escolha = view.recebeOpcaoAdmin();
-            switch(escolha){
+    public void selecionarOpcoesAdmin() {
+        opcoesAdmin : while (true) {
+            String escolha = view.receberOpcaoAdmin();
+            switch (escolha) {
                 case "1":   
-                    criaUsuario();
+                    criarUsuario();
                     break;
                 case "2":
-                    buscaUsuarioPorId();
+                    buscarUsuarioPorId();
                     break;
                 case "3":
-                    buscaTodosUsuarios();
+                    buscarTodosUsuarios();
                     break;
                 case "4":
-                    desativaUsuario();
+                    desativarUsuario();
                     break;
                 case "5":
                     break opcoesAdmin;
                 default:
-                    view.mostraOpcaoInvalida();
+                    view.mostrarOpcaoInvalida();
                     break;
             }
 
         }
     }
 
-    public void criaUsuario(){
-        boolean sucesso = false;
-        do{
-            Usuario usuarioCriado = view.recebeCriacaoUsuario(); 
-            sucesso = model.persisteUsuario(usuarioCriado);
+    public void criarUsuario() {
+        boolean sucesso;
 
-            if(sucesso == false){
-                view.mostraErroLogin();
-            }
-        } while(sucesso != true);
+        do {
+            Usuario usuarioCriado = view.receberCriacaoUsuario();
+            sucesso = model.persistirUsuario(usuarioCriado);
+
+            if (!sucesso)
+                view.mostrarErroLogin();
+        } while (!sucesso) ;
     }
 
-    public void buscaUsuarioPorId(){
-        String id = view.recebeIdUsuario();
-        Usuario usuarioBuscado = model.buscaUsuarioPorId(id);
-        
-        if (usuarioBuscado != null){
-            view.mostraUsuario(usuarioBuscado);
-        } else {
-            view.mostraUsuarioInvalido();
-        }
-    }
-    public void buscaTodosUsuarios(){
-        List<Usuario> todosUsuarios = model.buscaTodosUsuariosAtivos();
+    public void buscarUsuarioPorId() {
+        try {
+            Long id = view.receberIdUsuario();
+            Usuario usuarioBuscado = model.buscarUsuario(id);
+            view.mostrarUsuario(usuarioBuscado);
 
-        if (todosUsuarios.size() > 0){
-            view.mostraTodosUsuarios(todosUsuarios);
-        } else {
-            view.mostraNenhumUsuario();
+        } catch (NullPointerException e) {
+            view.mostrarUsuarioInvalido();
+        } catch (NumberFormatException e) {
+            view.mostrarOpcaoInvalida();
         }
     }
 
-    public void desativaUsuario(){
-        String id = view.recebeIdUsuario();
-        Usuario usuarioInativado = model.buscaUsuarioPorId(id);
+    public void buscarTodosUsuarios() {
+        List<Usuario> todosUsuarios = model.buscarTodosUsuariosAtivos();
 
-        if (usuarioInativado != null){
-            model.desativaUsuario(usuarioInativado);
-            view.mostraUsuarioRemovido();
-        } else {
-            view.mostraUsuarioInvalido();
+        if (todosUsuarios.isEmpty()) {
+            view.mostrarNenhumUsuario();
+            return;
+        }
+
+        view.mostrarTodosUsuarios(todosUsuarios);
+    }
+
+    public void desativarUsuario() {
+        try {
+            Long id = view.receberIdUsuario();
+            Usuario usuarioInativado = model.buscarUsuario(id);
+            model.desativarUsuario(usuarioInativado);
+            view.mostrarUsuarioRemovido();
+
+        } catch (NumberFormatException e) {
+            view.mostrarOpcaoInvalida();
+        } catch (NullPointerException e) {
+            view.mostrarUsuarioInvalido();
         }
     }
 
     //Métodos usuário
-    public void selecionaOpcoesUsuario(){
-        Usuario usuarioLogado =  tentaLogin();
+    public void selecionarOpcoesUsuario() {
+        Usuario usuarioLogado =  tentarLogin();
         
-        opcoesUsuario : while(true){
-            String escolha = view.recebeOpcaoUsuario();
+        opcoesUsuario : while (true) {
+            String escolha = view.receberOpcaoUsuario();
 
-            switch(escolha){
+            switch (escolha) {
                 case "1":
-                    vePerfil(usuarioLogado);
+                    verPerfil(usuarioLogado);
                     break;
                 case "2":
-                    mostraTimeline(usuarioLogado);
+                    mostrarTimeline(usuarioLogado);
                     break;
                 case "3":
-                    mostraUsuarios();
-                    escolheOpcoesSeguir(usuarioLogado);
+                    mostrarUsuarios();
+                    escolherOpcoesSeguir(usuarioLogado);
                     break;
                 case "4":
-                    postaMensagem(usuarioLogado);
+                    postarMensagem(usuarioLogado);
                     break;
                 case "5":
                     break opcoesUsuario;
                 default:
-                    view.mostraOpcaoInvalida();
+                    view.mostrarOpcaoInvalida();
                     break;
             }
         }
     }
-    public Usuario tentaLogin(){
-        Usuario usuarioEncontrado = null;
 
-        do{
-            Usuario usuarioEntrado = view.recebeLogin();
-            usuarioEncontrado = model.comparaLoginSenha(usuarioEntrado);
+    public Usuario tentarLogin() {
+        Usuario usuarioEncontrado;
 
-            if(usuarioEncontrado == null){
-                view.mostraLoginInvalido();
-            }
-        } while(usuarioEncontrado == null);
+        do {
+            Usuario usuarioEntrado = view.receberLogin();
+            usuarioEncontrado = model.compararLoginSenha(usuarioEntrado);
+
+            if (usuarioEncontrado == null)
+                view.mostrarLoginInvalido();
+        } while (usuarioEncontrado == null);
         
-        view.mostraBemVindo(usuarioEncontrado);
+        view.mostrarBemVindo(usuarioEncontrado);
         return usuarioEncontrado;
     }
 
-    public void vePerfil(Usuario usuario){
-        view.mostraPerfil(usuario);
-        Iterator<String> mensagens = model.buscaPostagens(usuario);
-        view.mostraPostagens(mensagens);
+    public void verPerfil(Usuario usuario) {
+        view.mostrarPerfil(usuario);
+        Iterator<String> mensagens = model.buscarPostagens(usuario);
+        view.mostrarPostagens(mensagens);
     }
 
-    public void mostraUsuarios(){
-        List<Usuario> usuarios = model.buscaTodosUsuariosAtivos();
-        view.mostraTodosPerfis(usuarios);
-    }
-    public void mostraTimeline(Usuario usuarioLogado){
-        String[][] mensagens =  model.buscaTimeline(usuarioLogado);
-
-        if(mensagens != null){
-            view.mostraTimeline(mensagens);
-        } else {
-            view.mostraTimelineVazia();
-        }
-    }
-    public void postaMensagem(Usuario usuario){
-        String mensagem = view.recebePostagem();
-        model.salvaMensagem(mensagem, usuario);
+    public void mostrarUsuarios() {
+        List<Usuario> usuarios = model.buscarTodosUsuariosAtivos();
+        view.mostrarTodosPerfis(usuarios);
     }
 
-    public void escolheOpcoesSeguir(Usuario usuarioLogado){
+    public void mostrarTimeline(Usuario usuarioLogado) {
+        MultiMap mensagens =  model.buscarTimeline(usuarioLogado);
+
+        if (mensagens != null && !mensagens.isEmpty())
+            view.mostrarTimeline(mensagens);
+        else
+            view.mostrarTimelineVazia();
+    }
+
+    public void postarMensagem(Usuario usuario) {
+        String mensagem = view.receberPostagem();
+        model.salvarMensagem(mensagem, usuario);
+    }
+
+    public void escolherOpcoesSeguir(Usuario usuarioLogado) {
         String escolha = "0";
 
-        subOpcoesSeguir: while(escolha != "1" || escolha != "2"){
-            escolha = view.recebeSubOpcoesSeguir();
+        opcoesSeguir: while (escolha != "1" || escolha != "2") {
+            escolha = view.receberSubOpcoesSeguir();
 
-            switch(escolha){
+            switch (escolha) {
                 case "1":
-                    segueUsuario(usuarioLogado);
+                    seguirUsuario(usuarioLogado);
                     break;
                 case "2":
-                    break subOpcoesSeguir;
+                    break opcoesSeguir;
                 default:
-                    view.mostraOpcaoInvalida();
+                    view.mostrarOpcaoInvalida();
                     break;
             }
         }
     }
-    public void segueUsuario(Usuario usuarioLogado){
-        String nomeUsuario = view.recebeNomePerfil();
-        Usuario usuarioASeguir = model.buscaUsuarioPorLogin(nomeUsuario);
 
-        if(usuarioASeguir != null){
-            boolean sucesso = model.seguirUsuario(usuarioLogado, usuarioASeguir);
-            if(sucesso != true){
-                view.mostraOpcaoInvalida();
-            } else {
-                view.mostraSeguindo(usuarioASeguir);
-            }
-        } else {
-            view.mostraUsuarioInvalido();
+    public void seguirUsuario(Usuario usuarioLogado) {
+        String nomeUsuario = view.receberNomePerfil();
+        Usuario usuarioASeguir = model.buscarUsuario(nomeUsuario);
+
+        if (usuarioASeguir == null) {
+            view.mostrarUsuarioInvalido();
+            return;
         }
+
+        boolean sucesso = model.seguirUsuario(usuarioLogado, usuarioASeguir);
+
+        if (!sucesso)
+            view.mostrarOpcaoInvalida();
+        else
+            view.mostrarSeguindo(usuarioASeguir);
     }
 
 }
