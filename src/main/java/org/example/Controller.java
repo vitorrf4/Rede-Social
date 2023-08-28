@@ -20,15 +20,9 @@ public class Controller {
             String escolhaPrograma = view.receberOpcaoPrograma();
     
             switch (escolhaPrograma) {
-                case "1":
-                    selecionarOpcoesAdmin();
-                    break;
-                case "2":
-                    selecionarOpcoesUsuario();
-                    break;
-                default:
-                    view.mostrarOpcaoInvalida();
-                break;
+                case "1" -> selecionarOpcoesAdmin();
+                case "2" -> selecionarOpcoesUsuario();
+                default -> view.mostrarOpcaoInvalida();
             }
         }
 
@@ -39,23 +33,12 @@ public class Controller {
         opcoesAdmin : while (true) {
             String escolha = view.receberOpcaoAdmin();
             switch (escolha) {
-                case "1":   
-                    criarUsuario();
-                    break;
-                case "2":
-                    buscarUsuarioPorId();
-                    break;
-                case "3":
-                    buscarTodosUsuarios();
-                    break;
-                case "4":
-                    desativarUsuario();
-                    break;
-                case "5":
-                    break opcoesAdmin;
-                default:
-                    view.mostrarOpcaoInvalida();
-                    break;
+                case "1" -> criarUsuario();
+                case "2" -> buscarUsuarioPorId();
+                case "3" -> buscarTodosUsuarios();
+                case "4" -> desativarUsuario();
+                case "5" -> { break opcoesAdmin;}
+                default -> view.mostrarOpcaoInvalida();
             }
 
         }
