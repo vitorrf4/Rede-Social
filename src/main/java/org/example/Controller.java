@@ -102,24 +102,15 @@ public class Controller {
             String escolha = view.receberOpcaoUsuario();
 
             switch (escolha) {
-                case "1":
-                    verPerfil(usuarioLogado);
-                    break;
-                case "2":
-                    mostrarTimeline(usuarioLogado);
-                    break;
-                case "3":
+                case "1" -> verPerfil(usuarioLogado);
+                case "2" -> mostrarTimeline(usuarioLogado);
+                case "3" -> {
                     mostrarUsuarios();
                     escolherOpcoesSeguir(usuarioLogado);
-                    break;
-                case "4":
-                    postarMensagem(usuarioLogado);
-                    break;
-                case "5":
-                    break opcoesUsuario;
-                default:
-                    view.mostrarOpcaoInvalida();
-                    break;
+                }
+                case "4" -> postarMensagem(usuarioLogado);
+                case "5" -> { break opcoesUsuario; }
+                default -> view.mostrarOpcaoInvalida();
             }
         }
     }
