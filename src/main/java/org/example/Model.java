@@ -129,16 +129,16 @@ public class Model {
             usuarioDesativado.setAtivo(false);
             diminuirNumSeguindo(usuarioDesativado);
             diminuirNumSeguidores(usuarioDesativado);
+            em.getTransaction().commit();
         } catch (Exception e) {
             em.getTransaction().rollback();
-        } finally {
-            em.getTransaction().commit();
+            throw e;
         }
     }
 
     public void diminuirNumSeguindo(Usuario usuarioDesativado) {
         for (Long id : usuarioDesativado.getSeguindo()) {
-            Usuario seguindo = buscarUsuario(Long.toString(id));
+            Usuario seguindo = buscarUsuario(id);
             seguindo.setSeguidores(seguindo.getSeguidores() - 1);
         }
     }
@@ -147,9 +147,7 @@ public class Model {
         List<Usuario> todosUsuarios = buscarTodosUsuariosAtivos();
 
         for (Usuario seguindo : todosUsuarios) {
-            if (seguindo.getSeguindo().contains(usuarioDesativado.getId())) {
-                seguindo.getSeguindo().remove(usuarioDesativado.getId());
-            }
+            seguindo.getSeguindo().remove(usuarioDesativado.getId());
         }
     }
 
